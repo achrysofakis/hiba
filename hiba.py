@@ -32,17 +32,16 @@ how='left'
 missing_rows = merged_df[merged_df['Code SIREN'].isnull() |
 merged_df['Code NAF'].isnull()]
 for idx, row in missing_rows.iterrows():
-supplier_name = row['Fournisseur enfant panel']
-print(f"\nSupplier not found: {supplier_name}")
+    supplier_name = row['Fournisseur enfant panel']
+    print(f"\nSupplier not found: {supplier_name}")
     while True:
-code_siren = input(f"SIREN (9 digits): ").strip()
-    if len(code_siren) == 9 and code_siren.isdigit():
-break
+        code_siren = input(f"SIREN (9 digits): ").strip()
+        if len(code_siren) == 9 and code_siren.isdigit():
+            break
     while True:
-code_ape = input(f"NAF (4 digits + 1 letter): ").strip().upper()
-    if re.match(r'^\d{4}[A-Z]$'
-    , code_naf):
-break
+        code_ape = input(f"NAF (4 digits + 1 letter): ").strip().upper()
+        if re.match(r'^\d{4}[A-Z]$', code_naf):
+            break
 merged_df.loc[idx,'Code SIREN'] = code_siren
 merged_df.loc[idx,'Code APE'] = code_naf
 #Step 4 — Harmonize APE and NAF Codes for Sector Mapping
@@ -59,49 +58,18 @@ how='left'
 )
 #Step 6 — Calculate Environmental Impacts
 def safe_multiply(x, y):
-try:
-return float(x) * float(y)
-except (TypeError, ValueError):
-return None
+    try:
+        return float(x) * float(y)
+    except (TypeError, ValueError):
+        return None
 merged_sector['GHG Emissions (kg CO2)'] = merged_sector.apply(
-lambda row: safe_multiply(row['DEPENSES'], row['kg CO2-eq per
-EUR2024']), axis=1)
-Step 7 — Structure Final Report for Export
+lambda row: safe_multiply(row['DEPENSES'], row['kg CO2-eq perEUR2024']), axis=1)
+#Step 7 — Structure Final Report for Export
 structured_rows = []
-grouped = merged_sector.groupby(['Panel parent'
-,
-'Panel enfant'])
+grouped = merged_sector.groupby(['Panel parent','Panel enfant'])
 for (panel_parent, panel_enfant), group in grouped:
-total_depenses = group['DEPENSES'].sum(skipna=True)
-structured_rows.append({
-'Panel parent': panel_parent,
-'Panel enfant': panel_enfant,
-'Fournisseur': ""
-,
-'DÉPENSES (€)': f"Total : {total_depenses:,.0f}".replace(",","").replace(".",","),'Code NAF': "",'Code SIREN': "",'Émissions CO2 (kg)': ""})
-for _, row in group.iterrows():
-structured_rows.append({
-'Panel parent': panel_parent,
-'Panel enfant': panel_enfant,
-'Fournisseur': row['Fournisseur enfant panel'][:35],
-'DÉPENSES (€)': f"{row['DEPENSES']:,.0f}".replace("
-,
-"
-,
-" ").replace("."
-,
-"
-,
-"),
-'Code NAF': row['Code NAF'],
-'Code SIREN': row['Code SIREN'],
-'Émissions CO2 (kg)': f"{row['GHG Emissions (kg CO2)']:,.0f}".replace("
-,
-"
-,
-" ").replace("."
-,
-"
-,
-") if pd.notna(row['GHG Emissions (kg CO2)']) else ""
-,
+    total_depenses = group['DEPENSES'].sum(skipna=True)
+    structured_rows.append({'Panel parent': panel_parent,'Panel enfant': panel_enfant,'Fournisseur': "",'DÉPENSES (€)': f"Total : {total_depenses:,.0f}".replace(",","").replace(".",","),'Code NAF': "",'Code SIREN': "",'Émissions CO2 (kg)': ""})
+    for _, row in group.iterrows():
+        structured_rows.append({'Panel parent': panel_parent,'Panel enfant': panel_enfant,'Fournisseur': row['Fournisseur enfant panel'][:35],'DÉPENSES (€)': f"{row['DEPENSES']:,.0f}".replace(","," ").replace(".",","),'Code NAF': row['Code NAF'],'Code SIREN': row['Code SIREN'],'Émissions CO2 (kg)': f"{row['GHG Emissions (kg CO2)']:,.0f}".replace(","," ").replace(".",",") if pd.notna(row['GHG Emissions (kg CO2)'])  else ""
+                                })
